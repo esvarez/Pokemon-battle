@@ -1,6 +1,7 @@
 package dev.ericksuarez.pokemon.battle.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.ericksuarez.pokemon.battle.error.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,9 +41,14 @@ public abstract class HttpClientBase {
         try {
             var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 300) {
-                log.error("event=errorMakeRequest response={}, statusCode={}, body={}", response, response.statusCode(),
-                        response.body());
-                throw new RuntimeException("Error request" + response.statusCode());
+                log.error("event=errorMakeRequest statusCode={}, body={}", response.statusCode(), response.body());
+                switch (response.statusCode()) {
+                    case 404:
+                        throw new NotFoundException("Resource not found: " + request.uri());
+                    default:
+                        throw new RuntimeException("Error request " + response.statusCode());
+                }
+
             } else if(response.statusCode() >= 200) {
                 return response;
             }
@@ -50,8 +56,7 @@ public abstract class HttpClientBase {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            throw new RuntimeException("Error sending request");
         }
+        throw new RuntimeException("Error sending request");
     }
 }
