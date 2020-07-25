@@ -5,12 +5,12 @@ import java.util.Map;
 import java.util.Set;
 
 public class DamageDealer {
-    public static Map<String, Set<String>> strongTypes;
+    public static Map<String, Set<String>> doubleDamageTypes;
 
-    public static Map<String, Set<String>> weakTypes;
+    public static Map<String, Set<String>> halfDamageTypes;
 
     static {
-        strongTypes = new HashMap<>();
-        weakTypes = new HashMap<>();
+        doubleDamageTypes = new HashMap<>();
+        halfDamageTypes = new HashMap<>();
     }
 }

@@ -43,37 +43,37 @@ public class PokemonApiClientTest {
     }
 
     @Test
-    public void findPokemon_pokemonExist_returnPokemon() {
-        var pokemon = pokemonApiClient.findPokemon("charmander");
+    public void findPokemonByIdentifier_pokemonExist_returnPokemon() {
+        var pokemon = pokemonApiClient.findPokemonByIdentifier("charmander");
 
         assertNotNull(pokemon);
     }
 
     @Test
-    public void findPokemon_pokemonNotExist_throwException() throws IOException, InterruptedException {
+    public void findPokemonByIdentifier_pokemonNotExist_throwException() throws IOException, InterruptedException {
         when(httpClient.send(any(HttpRequest.class), any()))
                 .thenReturn(buildResponse(404));
 
         var thrown = assertThrows(NotFoundException.class,
-                () -> pokemonApiClient.findPokemon("agumon"));
+                () -> pokemonApiClient.findPokemonByIdentifier("agumon"));
 
         assertTrue(thrown.getMessage().contains("Resource not found"));
     }
 
     @Test
-    public void findPokemon_numberValid_returnPokemon() {
-        var pokemon = pokemonApiClient.findPokemon("4");
+    public void findPokemonByIdentifier_numberValid_returnPokemon() {
+        var pokemon = pokemonApiClient.findPokemonByIdentifier("4");
 
         assertNotNull(pokemon);
     }
 
     @Test
-    public void findPokemon_numberInvalid_throwException() throws IOException, InterruptedException {
+    public void findPokemonByIdentifier_numberInvalid_throwException() throws IOException, InterruptedException {
         when(httpClient.send(any(HttpRequest.class), any()))
                 .thenReturn(buildResponse(404));
 
         var thrown = assertThrows(NotFoundException.class,
-                () -> pokemonApiClient.findPokemon("159478"));
+                () -> pokemonApiClient.findPokemonByIdentifier("159478"));
 
         assertTrue(thrown.getMessage().contains("Resource not found"));
     }
