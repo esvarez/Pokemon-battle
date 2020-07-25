@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
+// TODO model could be improved: create one for battle with only Types variable and other for compare with Moves
 public class Pokemon {
     private String name;
 

@@ -31,7 +31,7 @@ public abstract class HttpClientBase {
             return responseEntity;
         } catch (IOException e) {
             e.printStackTrace();
-            log.error("event=errorMappingResponse response={}", response);
+            log.error("event=errorMappingResponse response={}", response.body());
             throw new RuntimeException("IO exception");
         }
     }

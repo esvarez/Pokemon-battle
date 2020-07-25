@@ -31,27 +31,13 @@ public class PokemonApiClient extends HttpClientBase {
         super(httpClient, objectMapper);
     }
 
-    public Optional<Pokemon> findPokemonByName(String name) {
-        log.info("event=findPokemonByNameInvoked name={}", name);
+    public Optional<Pokemon> findPokemon(String identifier) {
+        log.info("event=findPokemonByNameInvoked identifier={}", identifier);
         var request = HttpRequest.newBuilder()
                 .GET()
-                .uri(URI.create(path + pokemon + name))
+                .uri(URI.create(path + pokemon + identifier))
                 .header("Content-Type", "application/json")
                 .build();
-        return findPokemon(request);
-    }
-
-    public Optional<Pokemon> findPokemonById(int id) {
-        log.info("event=findPokemonByIdInvoked id={}", id);
-        var request = HttpRequest.newBuilder()
-                .GET()
-                .uri(URI.create(path + pokemon + id))
-                .header("Content-Type", "application/json")
-                .build();
-        return findPokemon(request);
-    }
-
-    private Optional<Pokemon> findPokemon(HttpRequest request) {
         var pokemon = makeRequest(request, Pokemon.class);
         log.info("event=pokemonRetrieved pokemon={}", pokemon);
         return Optional.of(pokemon);

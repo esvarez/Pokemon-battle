@@ -12,7 +12,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.util.Optional;
 
 import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildResponse;
 import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildPokemon;
@@ -43,37 +42,37 @@ public class PokemonApiClientTest {
     }
 
     @Test
-    public void findPokemonByName_pokemonExist_returnPokemon() {
-        var pokemon = pokemonApiClient.findPokemonByName("charmander");
+    public void findPokemon_pokemonExist_returnPokemon() {
+        var pokemon = pokemonApiClient.findPokemon("charmander");
 
         assertTrue(pokemon.isPresent());
     }
 
     @Test
-    public void findPokemonByName_pokemonNotExist_throwException() throws IOException, InterruptedException {
+    public void findPokemon_pokemonNotExist_throwException() throws IOException, InterruptedException {
         when(httpClient.send(any(HttpRequest.class), any()))
                 .thenReturn(buildResponse(404));
 
         var thrown = assertThrows(NotFoundException.class,
-                () -> pokemonApiClient.findPokemonByName("agumon"));
+                () -> pokemonApiClient.findPokemon("agumon"));
 
         assertTrue(thrown.getMessage().contains("Resource not found"));
     }
 
     @Test
-    public void findPokemonById_numberValid_returnPokemon() {
-        var pokemon = pokemonApiClient.findPokemonById(4);
+    public void findPokemon_numberValid_returnPokemon() {
+        var pokemon = pokemonApiClient.findPokemon("4");
 
         assertTrue(pokemon.isPresent());
     }
 
     @Test
-    public void findPokemonById_numberInvalid_throwException() throws IOException, InterruptedException {
+    public void findPokemon_numberInvalid_throwException() throws IOException, InterruptedException {
         when(httpClient.send(any(HttpRequest.class), any()))
                 .thenReturn(buildResponse(404));
 
         var thrown = assertThrows(NotFoundException.class,
-                () -> pokemonApiClient.findPokemonById(159478));
+                () -> pokemonApiClient.findPokemon("159478"));
 
         assertTrue(thrown.getMessage().contains("Resource not found"));
     }
