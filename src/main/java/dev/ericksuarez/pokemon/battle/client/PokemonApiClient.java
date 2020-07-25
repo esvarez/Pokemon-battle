@@ -23,10 +23,8 @@ public class PokemonApiClient extends HttpClientBase {
     @Value("${application.pokemonApi.findPokemon}")
     private String findPokemon;
 
-    @Value("${application.pokemonApi.findType}")
-    private String findType;
-
-    private final String template = "%s%s";
+    /*@Value("${application.pokemonApi.findType}")
+    private String findType;*/
 
     @Autowired
     public PokemonApiClient(HttpClient httpClient, ObjectMapper objectMapper) {

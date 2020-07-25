@@ -1,5 +1,6 @@
 package dev.ericksuarez.pokemon.battle.service;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +11,7 @@ import java.util.stream.Stream;
 import dev.ericksuarez.pokemon.battle.client.PokemonApiClient;
 import dev.ericksuarez.pokemon.battle.model.Pokemon;
 import dev.ericksuarez.pokemon.battle.model.Type;
+import dev.ericksuarez.pokemon.battle.model.TypeDetails;
 import dev.ericksuarez.pokemon.battle.model.Types;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,10 @@ import static dev.ericksuarez.pokemon.battle.util.DamageDealer.halfDamageTypes;
 @Slf4j
 @Service
 public class BattleService {
+
+    private Type type;
+
+    private TypeDetails typeDetails;
 
     private PokemonApiClient pokemonApiClient;
 
@@ -37,7 +43,6 @@ public class BattleService {
     public String battleAnalysis(String idPokemon, String idPokemon2) {
         var pokemon = pokemonApiClient.findPokemonByIdentifier(idPokemon);
         var pokemon2 = pokemonApiClient.findPokemonByIdentifier(idPokemon2);
-
 
         log.info("maps before checking doubleDame={} halfDamage={}", doubleDamageTypes, halfDamageTypes);
         checkExistTypes(pokemon);
@@ -70,12 +75,14 @@ public class BattleService {
         pokemon.getTypes().stream()
                 .map(types -> types.getType())
                 .filter(type -> !doubleDamageTypes.containsKey(type.getName()))
-                .peek(this::addTypeToDoubleDamageList);
+                .peek(type -> log.info("event=typeAddedToDoubleDamageList type={}", type))
+                .forEach(this::addTypeToDoubleDamageList);
 
         pokemon.getTypes().stream()
                 .map(types -> types.getType())
                 .filter(type -> !halfDamageTypes.containsKey(type.getName()))
-                .peek(this::addTypeToHalfDamageList);
+                .peek(type -> log.info("event=typeAddedToHalfDamageList type={}", type))
+                .forEach(this::addTypeToHalfDamageList);
     }
 
     private void addTypeToDoubleDamageList(Type type) {
@@ -90,6 +97,7 @@ public class BattleService {
 
     private void addTypeToHalfDamageList(Type type) {
         log.info("event=addingTypeToHalfDamageList Type={}", type);
+        //TODO it could be improved to avoid double call of the same request
         var typeDetails = pokemonApiClient.findTypeByUrl(type.getUrl());
         var types = typeDetails.getDamageRelations().getHalfDamageFrom().stream()
                 .map(halfDamageTypes -> halfDamageTypes.getName())

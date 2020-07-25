@@ -5,3 +5,4 @@ application:
   pokemonApi:
     path: https://pokeapi.co/api/v2/
     findPokemon: pokemon/
+    findType: type/

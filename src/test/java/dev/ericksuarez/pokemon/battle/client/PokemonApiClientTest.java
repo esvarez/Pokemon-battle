@@ -13,8 +13,9 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 
-import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildResponse;
 import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildPokemon;
+import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildResponse;
+import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildTypeDetails;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,12 +40,12 @@ public class PokemonApiClientTest {
         when(objectMapper.readValue(any(byte[].class), any(Class.class)))
                 .thenReturn(buildPokemon());
         ReflectionTestUtils.setField(pokemonApiClient, "path", "http://testpath/");
-        ReflectionTestUtils.setField(pokemonApiClient, "pokemon", "poketest/");
+        ReflectionTestUtils.setField(pokemonApiClient, "findPokemon", "poketest/");
     }
 
     @Test
     public void findPokemonByIdentifier_pokemonExist_returnPokemon() {
-        var pokemon = pokemonApiClient.findPokemonByIdentifier("charmander");
+        final var pokemon = pokemonApiClient.findPokemonByIdentifier("charmander");
 
         assertNotNull(pokemon);
     }
@@ -54,7 +55,7 @@ public class PokemonApiClientTest {
         when(httpClient.send(any(HttpRequest.class), any()))
                 .thenReturn(buildResponse(404));
 
-        var thrown = assertThrows(NotFoundException.class,
+        final var thrown = assertThrows(NotFoundException.class,
                 () -> pokemonApiClient.findPokemonByIdentifier("agumon"));
 
         assertTrue(thrown.getMessage().contains("Resource not found"));
@@ -62,7 +63,7 @@ public class PokemonApiClientTest {
 
     @Test
     public void findPokemonByIdentifier_numberValid_returnPokemon() {
-        var pokemon = pokemonApiClient.findPokemonByIdentifier("4");
+        final var pokemon = pokemonApiClient.findPokemonByIdentifier("4");
 
         assertNotNull(pokemon);
     }
@@ -72,8 +73,37 @@ public class PokemonApiClientTest {
         when(httpClient.send(any(HttpRequest.class), any()))
                 .thenReturn(buildResponse(404));
 
-        var thrown = assertThrows(NotFoundException.class,
+        final var thrown = assertThrows(NotFoundException.class,
                 () -> pokemonApiClient.findPokemonByIdentifier("159478"));
+
+        assertTrue(thrown.getMessage().contains("Resource not found"));
+    }
+
+    @Test
+    public void findTypeByUrl_urlExist_returnTypeDetails() throws IOException {
+        when(objectMapper.readValue(any(byte[].class), any(Class.class)))
+                .thenReturn(buildTypeDetails());
+
+        final var typeDetails = pokemonApiClient.findTypeByUrl("http://test/to/get/type");
+
+        assertNotNull(typeDetails);
+    }
+
+    @Test
+    public void findTypeByUrl_urlWrong_returnTypeDetails() throws IOException, InterruptedException {
+        final var thrown = assertThrows(IllegalArgumentException.class,
+                () -> pokemonApiClient.findTypeByUrl("ThisNotIsAnUrl"));
+
+        assertTrue(thrown.getMessage().contains("URI with undefined scheme"));
+    }
+
+    @Test
+    public void findTypeByUrl_typeNotExit_returnTypeDetails() throws IOException, InterruptedException {
+        when(httpClient.send(any(HttpRequest.class), any()))
+                .thenReturn(buildResponse(404));
+
+        final var thrown = assertThrows(NotFoundException.class,
+                () -> pokemonApiClient.findTypeByUrl("http://test/type/notExist/404"));
 
         assertTrue(thrown.getMessage().contains("Resource not found"));
     }
