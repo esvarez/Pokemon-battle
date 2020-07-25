@@ -31,7 +31,7 @@ public class PokemonApiClient extends HttpClientBase {
         super(httpClient, objectMapper);
     }
 
-    public Optional<Pokemon> findPokemon(String identifier) {
+    public Pokemon findPokemon(String identifier) {
         log.info("event=findPokemonByNameInvoked identifier={}", identifier);
         var request = HttpRequest.newBuilder()
                 .GET()
@@ -40,6 +40,6 @@ public class PokemonApiClient extends HttpClientBase {
                 .build();
         var pokemon = makeRequest(request, Pokemon.class);
         log.info("event=pokemonRetrieved pokemon={}", pokemon);
-        return Optional.of(pokemon);
+        return pokemon;
     }
 }

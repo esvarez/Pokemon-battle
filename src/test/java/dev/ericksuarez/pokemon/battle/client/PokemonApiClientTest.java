@@ -15,6 +15,7 @@ import java.net.http.HttpRequest;
 
 import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildResponse;
 import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildPokemon;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,7 +46,7 @@ public class PokemonApiClientTest {
     public void findPokemon_pokemonExist_returnPokemon() {
         var pokemon = pokemonApiClient.findPokemon("charmander");
 
-        assertTrue(pokemon.isPresent());
+        assertNotNull(pokemon);
     }
 
     @Test
@@ -63,7 +64,7 @@ public class PokemonApiClientTest {
     public void findPokemon_numberValid_returnPokemon() {
         var pokemon = pokemonApiClient.findPokemon("4");
 
-        assertTrue(pokemon.isPresent());
+        assertNotNull(pokemon);
     }
 
     @Test
