@@ -16,6 +16,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public class UtilTest {
@@ -57,6 +58,14 @@ public class UtilTest {
 
         return Pokemon.builder()
                 .name("charmander")
+                .types(types)
+                .moves(moves)
+                .build();
+    }
+
+    public static Pokemon buildPokemon(String name, List<Types> types, List<Moves> moves) {
+        return Pokemon.builder()
+                .name(name)
                 .types(types)
                 .moves(moves)
                 .build();

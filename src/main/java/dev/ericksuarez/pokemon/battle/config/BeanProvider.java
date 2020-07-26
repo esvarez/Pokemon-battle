@@ -2,6 +2,7 @@ package dev.ericksuarez.pokemon.battle.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.ericksuarez.pokemon.battle.util.DamageDealer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -23,5 +24,11 @@ public class BeanProvider {
     @Scope("singleton")
     public ObjectMapper objectMapper() {
         return new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    @Bean
+    @Scope("singleton")
+    public DamageDealer damageDealer() {
+        return new DamageDealer();
     }
 }

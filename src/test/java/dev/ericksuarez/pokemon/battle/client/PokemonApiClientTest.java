@@ -90,7 +90,7 @@ public class PokemonApiClientTest {
     }
 
     @Test
-    public void findTypeByUrl_urlWrong_returnTypeDetails() throws IOException, InterruptedException {
+    public void findTypeByUrl_urlWrong_throwException() throws IOException, InterruptedException {
         final var thrown = assertThrows(IllegalArgumentException.class,
                 () -> pokemonApiClient.findTypeByUrl("ThisNotIsAnUrl"));
 
@@ -98,7 +98,7 @@ public class PokemonApiClientTest {
     }
 
     @Test
-    public void findTypeByUrl_typeNotExit_returnTypeDetails() throws IOException, InterruptedException {
+    public void findTypeByUrl_typeNotExit_throwException() throws IOException, InterruptedException {
         when(httpClient.send(any(HttpRequest.class), any()))
                 .thenReturn(buildResponse(404));
 

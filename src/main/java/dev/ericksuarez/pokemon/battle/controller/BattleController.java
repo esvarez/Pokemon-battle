@@ -1,5 +1,6 @@
 package dev.ericksuarez.pokemon.battle.controller;
 
+import dev.ericksuarez.pokemon.battle.model.AnalysisResponse;
 import dev.ericksuarez.pokemon.battle.service.BattleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,14 +19,8 @@ public class BattleController {
         this.battleService = battleService;
     }
 
-    @GetMapping("/")
-    public String foo() {
-        battleService.findPokemon("charrrmander");
-        return "ok";
-    }
-
     @GetMapping("battle/{pokemon}/vs/{pokemon2}")
-    public String battlePokemon(@PathVariable String pokemon, @PathVariable String pokemon2) {
+    public AnalysisResponse battlePokemon(@PathVariable String pokemon, @PathVariable String pokemon2) {
         return battleService.battleAnalysis(pokemon, pokemon2);
     }
 }
