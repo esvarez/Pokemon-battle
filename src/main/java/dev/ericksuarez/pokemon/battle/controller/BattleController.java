@@ -35,7 +35,7 @@ public class BattleController {
 
     @GetMapping("/compare")
     public CommonMovesPaged compare(@RequestParam("pokemons") String[] pokemons, @RequestParam Optional<String> lang,
-                                    @RequestParam Optional<Integer> paged) {
-        return battleService.comparePokemon(pokemons, lang, paged);
+                                    @RequestParam Optional<Integer> limit, @RequestParam Optional<Integer> page) {
+        return battleService.comparePokemon(pokemons, lang, limit, page);
     }
 }

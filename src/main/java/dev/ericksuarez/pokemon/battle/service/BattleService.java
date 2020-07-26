@@ -2,7 +2,6 @@ package dev.ericksuarez.pokemon.battle.service;
 
 import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -76,37 +75,44 @@ public class BattleService {
                 .build();
     }
 
-    public CommonMovesPaged comparePokemon(String[] pokemons, Optional<String> lang, Optional<Integer> paged) {
-        var pokemonsProcessed = new HashSet<Pokemon>();
-        var movesProcessed = new HashSet<Move>();
-
+    public CommonMovesPaged comparePokemon(String[] pokemons, Optional<String> lang, Optional<Integer> movesPage,
+                                           Optional<Integer> page) {
         final int DEFAULT_LIMIT = 10;
-        int limit = paged.orElse(DEFAULT_LIMIT);
+        final int DEFAULT_PAGE = 1;
+        final String DEFAULT_LANG = "en";
+        int limit = movesPage.orElse(DEFAULT_LIMIT);
+        int pageNumber = page.orElse(DEFAULT_PAGE);
+        int skip = (pageNumber - 1) * limit;
 
-        var commonMoves = Arrays.stream(pokemons)
+        var pokemonsToProcess = Arrays.stream(pokemons)
                 .map(pokemonApiClient::findPokemonByIdentifier)
-                .filter(pokemon -> !pokemonsProcessed.contains(pokemon))
-                .peek(pokemonsProcessed::add)
+                .distinct()
+                .collect(Collectors.toList());
+
+        String pokemonNames = pokemonsToProcess.stream()
+                .map(Pokemon::getName)
+                .collect(Collectors.joining(","));
+
+        var commonMoves = pokemonsToProcess.stream()
                 .flatMap(pokemon -> pokemon.getMoves().stream())
                 .map(Moves::getMove)
-                .filter(move -> !movesProcessed.add(move))
-                .collect(Collectors.toSet());
-        // TODO get List pokemon names
-        // TODO get List pokemon ids
-        pokemonsProcessed.stream()
-                .map(Pokemon::getName);
+                .collect(Collectors.groupingBy(move -> move, Collectors.counting()))
+                .entrySet().stream()
+                .filter(key -> key.getValue() == pokemonsToProcess.size())
+                .map(map -> map.getKey())
+                .collect(Collectors.toList());
 
-        var moves = translateMoves(commonMoves, lang, limit);
+        var moves = translateMoves(commonMoves, lang, limit, skip);
 
-        String host = InetAddress.getLoopbackAddress().getHostName() + ":" +  environment.getProperty("server.port") + "/api/compare";
+        String pokemonIds = pokemonsToProcess.stream()
+                .map(Pokemon::getId)
+                .collect(Collectors.joining(","));
 
-        return CommonMovesPaged.builder()
-                .pokemonsCompared("Lista de pokemons")
-                .lang(lang.orElse("en"))
-                .moves(limit)
+        var movesPaged = getPaginateValues(pokemonIds, lang.orElse(DEFAULT_LANG), pageNumber, limit, commonMoves.size());
+
+        return movesPaged.toBuilder()
+                .pokemonsCompared(pokemonNames)
                 .moveList(moves)
-                .previous(host)
-                .next(host)
                 .build();
     }
 
@@ -158,23 +164,45 @@ public class BattleService {
                 .anyMatch(type -> damageList.contains(type));
     }
 
-    private List<String> translateMoves(Set<Move> moves, Optional<String> lang, int limit) {
-        // TODO add skip
+    private CommonMovesPaged getPaginateValues(String pokemonIds, String lang, int pageNumber, int limit, int totalMoves) {
+        String host = InetAddress.getLoopbackAddress().getHostName() + ":" +  environment.getProperty("server.port")
+                + "/api/compare?pokemons=" + pokemonIds;
+        String basicValues = "&lang=" + lang + "&limit=" + limit;
 
+        int totalPages = totalMoves / limit;
+        String previous = pageNumber == 1
+                ? "none"
+                : host + "&page=" + (pageNumber - 1) + basicValues;
+        String next = pageNumber == totalPages
+                ? "none"
+                : host + "&page=" + (pageNumber + 1) + basicValues;
+
+        return CommonMovesPaged.builder()
+                .lang(lang)
+                .page(pageNumber)
+                .previous(previous)
+                .next(next)
+                .totalMoves(totalMoves)
+                .pages(totalPages)
+                .moves(limit)
+                .build();
+    }
+
+    private List<String> translateMoves(List<Move> moves, Optional<String> lang, int limit, int skip) {
         if (lang.isPresent()) {
             String language = lang.get();
-            System.out.println(language);
             return moves.stream()
+                    .skip(skip)
                     .map(Move::getUrl)
                     .map(pokemonApiClient::findMoveByUrl)
                     .flatMap(moveDetails -> moveDetails.getNames().stream())
-                    .peek(System.out::println)
                     .filter(name -> name.getLanguage().getName().equals(language))
                     .map(Name::getName)
                     .limit(limit)
                     .collect(Collectors.toList());
         } else {
             return moves.stream()
+                    .skip(skip)
                     .map(Move::getName)
                     .limit(limit)
                     .collect(Collectors.toList());

@@ -15,7 +15,7 @@ import java.util.List;
 // TODO improve: create one model for battle with only 'types' variable and other for compare only with 'moves'
 public class Pokemon {
     private String name;
-    private int id;
+    private String id;
     private List<Moves> moves;
     private List<Types> types;
 }

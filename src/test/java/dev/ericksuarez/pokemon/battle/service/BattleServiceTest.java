@@ -1,12 +1,13 @@
 package dev.ericksuarez.pokemon.battle.service;
 
-import dev.ericksuarez.pokemon.battle.client.PokemonApiClient;
-import dev.ericksuarez.pokemon.battle.model.Move;
-import dev.ericksuarez.pokemon.battle.model.Moves;
-import dev.ericksuarez.pokemon.battle.model.Pokemon;
-import dev.ericksuarez.pokemon.battle.model.Type;
-import dev.ericksuarez.pokemon.battle.model.Types;
-import dev.ericksuarez.pokemon.battle.util.DamageDealer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,24 +17,26 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.springframework.core.env.Environment;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import dev.ericksuarez.pokemon.battle.client.PokemonApiClient;
+import dev.ericksuarez.pokemon.battle.model.Move;
+import dev.ericksuarez.pokemon.battle.model.MoveDetails;
+import dev.ericksuarez.pokemon.battle.model.Moves;
+import dev.ericksuarez.pokemon.battle.model.Pokemon;
+import dev.ericksuarez.pokemon.battle.model.Type;
+import dev.ericksuarez.pokemon.battle.model.Types;
+import dev.ericksuarez.pokemon.battle.util.DamageDealer;
 
-import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildPokemon;
-import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildResponse;
-import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildTypeDetails;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+
+import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildCharizard;
+import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildCharmander;
+import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildCharmeleon;
+import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildPokemon;
+import static dev.ericksuarez.pokemon.battle.util.UtilTest.buildTypeDetails;
+import static dev.ericksuarez.pokemon.battle.util.UtilTest.getMoveDetails;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BattleServiceTest {
@@ -132,6 +135,7 @@ public class BattleServiceTest {
         when(pokemonApiClient.findPokemonByIdentifier(anyString())).thenAnswer(new Answer<Pokemon>() {
             private int count = 0;
             private String name = "weedle";
+            private String id = "13";
             private List<Types> types = Arrays.asList(Types.builder()
                     .slot(1)
                     .type(Type.builder()
@@ -158,7 +162,7 @@ public class BattleServiceTest {
                 if (count++ % 2 == 0)
                     return buildPokemon();
                 else
-                    return buildPokemon(name, types, moves);
+                    return buildPokemon(name, id, types, moves);
             }
         });
 
@@ -172,6 +176,7 @@ public class BattleServiceTest {
         when(pokemonApiClient.findPokemonByIdentifier(anyString())).thenAnswer(new Answer<Pokemon>() {
             private int count = 0;
             private String name = "jinx";
+            private String id = "76";
             private List<Types> types = Arrays.asList(Types.builder()
                             .slot(1)
                             .type(Type.builder()
@@ -198,7 +203,7 @@ public class BattleServiceTest {
                 if (count++ % 2 == 0)
                     return buildPokemon();
                 else
-                    return buildPokemon(name, types, moves);
+                    return buildPokemon(name, id, types, moves);
             }
         });
 
@@ -208,11 +213,132 @@ public class BattleServiceTest {
     }
 
     @Test
-    public void foo() {
-        var set = new HashSet<Integer>();
+    public void comparePokemon_defaultValues_returnMoves() {
+        when(pokemonApiClient.findPokemonByIdentifier(anyString())).thenAnswer(new Answer<Pokemon>() {
+            public Pokemon answer(InvocationOnMock invocation) {
+                switch (invocation.getArgument(0, String.class)) {
+                    case "3":
+                        return buildCharmander();
+                    case "4":
+                        return buildCharmeleon();
+                    case "5":
+                        return buildCharizard();
+                    default:
+                        return buildPokemon();
+                }
+            }
+        });
 
-        System.out.println(set.add(1));
-        System.out.println(set.add(2));
-        System.out.println(set.add(1));
+        final var commonMoves = battleService.comparePokemon(new String[]{"3", "4", "5"}, Optional.empty(), Optional.empty(), Optional.empty());
+        assertEquals(2, commonMoves.getTotalMoves());
+        assertEquals(10, commonMoves.getMoves());
+        assertEquals("en", commonMoves.getLang());
     }
+
+    @Test
+    public void comparePokemon_avoidDuplicatePokemons_returnEmptyList() {
+        when(pokemonApiClient.findPokemonByIdentifier(anyString())).thenAnswer(new Answer<Pokemon>() {
+            public Pokemon answer(InvocationOnMock invocation) {
+                switch (invocation.getArgument(0, String.class)) {
+                    case "3":
+                        return buildCharmander();
+                    case "4":
+                    case "charmeleon":
+                        return buildCharmeleon();
+                    case "5":
+                        return buildCharizard();
+                    default:
+                        return buildPokemon();
+                }
+            }
+        });
+
+        final var commonMoves = battleService.comparePokemon(new String[]{"4", "4", "charmeleon", "3"}, Optional.empty(), Optional.empty(), Optional.empty());
+        assertEquals(3, commonMoves.getTotalMoves());
+        assertEquals(10, commonMoves.getMoves());
+        assertEquals("en", commonMoves.getLang());
+    }
+
+    @Test
+    public void comparePokemon_translateMovesToSpanish_returnMoves() {
+        when(pokemonApiClient.findPokemonByIdentifier(anyString())).thenAnswer(new Answer<Pokemon>() {
+            public Pokemon answer(InvocationOnMock invocation) {
+                switch (invocation.getArgument(0, String.class)) {
+                    case "3":
+                        return buildCharmander();
+                    case "4":
+                        return buildCharmeleon();
+                    case "5":
+                        return buildCharizard();
+                    default:
+                        return buildPokemon();
+                }
+            }
+        });
+
+        when(pokemonApiClient.findMoveByUrl(anyString())).thenAnswer(new Answer<MoveDetails>() {
+            public MoveDetails answer(InvocationOnMock invocation) {
+                return getMoveDetails(invocation.getArgument(0, String.class));
+            }
+        });
+
+        final var commonMoves = battleService.comparePokemon(new String[]{"3", "4", "5"}, Optional.of("es"), Optional.empty(), Optional.empty());
+        commonMoves.getMoveList().contains("Puño Fuego");
+        assertEquals(2, commonMoves.getTotalMoves());
+        assertEquals(10, commonMoves.getMoves());
+        assertEquals("es", commonMoves.getLang());
+    }
+
+    @Test
+    public void comparePokemon_limitMovesPerPage_returnMoves() {
+        when(pokemonApiClient.findPokemonByIdentifier(anyString())).thenAnswer(new Answer<Pokemon>() {
+            public Pokemon answer(InvocationOnMock invocation) {
+                switch (invocation.getArgument(0, String.class)) {
+                    case "3":
+                        return buildCharmander();
+                    case "4":
+                        return buildCharmeleon();
+                    case "5":
+                        return buildCharizard();
+                    default:
+                        return buildPokemon();
+                }
+            }
+        });
+
+        final var commonMoves = battleService.comparePokemon(new String[]{"3", "4", "5"}, Optional.empty(), Optional.of(1), Optional.empty());
+        System.out.println(commonMoves);
+        assertEquals(2, commonMoves.getTotalMoves());
+        assertEquals(1, commonMoves.getMoves());
+        assertEquals(2, commonMoves.getPages());
+        assertEquals(1, commonMoves.getPage());
+        assertEquals("en", commonMoves.getLang());
+    }
+
+    @Test
+    public void comparePokemon_getLastPage_returnMoves() {
+        when(pokemonApiClient.findPokemonByIdentifier(anyString())).thenAnswer(new Answer<Pokemon>() {
+            public Pokemon answer(InvocationOnMock invocation) {
+                switch (invocation.getArgument(0, String.class)) {
+                    case "3":
+                        return buildCharmander();
+                    case "4":
+                        return buildCharmeleon();
+                    case "5":
+                        return buildCharizard();
+                    default:
+                        return buildPokemon();
+                }
+            }
+        });
+
+        final var commonMoves = battleService.comparePokemon(new String[]{"3", "4", "5"}, Optional.empty(), Optional.of(1), Optional.of(2));
+        System.out.println(commonMoves);
+        assertEquals(2, commonMoves.getTotalMoves());
+        assertEquals(2, commonMoves.getPages());
+        assertEquals(2, commonMoves.getPage());
+        assertEquals("en", commonMoves.getLang());
+    }
+
+
 }
