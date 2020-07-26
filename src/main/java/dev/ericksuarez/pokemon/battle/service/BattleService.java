@@ -1,23 +1,31 @@
 package dev.ericksuarez.pokemon.battle.service;
 
-import java.util.Collections;
+import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+
 import dev.ericksuarez.pokemon.battle.client.PokemonApiClient;
 import dev.ericksuarez.pokemon.battle.model.AnalysisResponse;
+import dev.ericksuarez.pokemon.battle.model.CommonMovesPaged;
+import dev.ericksuarez.pokemon.battle.model.Move;
+import dev.ericksuarez.pokemon.battle.model.Moves;
+import dev.ericksuarez.pokemon.battle.model.Name;
 import dev.ericksuarez.pokemon.battle.model.Pokemon;
 import dev.ericksuarez.pokemon.battle.model.Type;
 import dev.ericksuarez.pokemon.battle.model.TypeDetails;
 import dev.ericksuarez.pokemon.battle.model.Types;
 import dev.ericksuarez.pokemon.battle.util.DamageDealer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -27,12 +35,15 @@ public class BattleService {
 
     private TypeDetails typeDetails;
 
+    private Environment environment;
+
     private DamageDealer damageDealer;
 
     private PokemonApiClient pokemonApiClient;
 
     @Autowired
-    public BattleService(DamageDealer damageDealer, PokemonApiClient pokemonApiClient) {
+    public BattleService(Environment environment, DamageDealer damageDealer, PokemonApiClient pokemonApiClient) {
+        this.environment = environment;
         this.damageDealer = damageDealer;
         this.pokemonApiClient = pokemonApiClient;
     }
@@ -42,12 +53,11 @@ public class BattleService {
         var pokemon = pokemonApiClient.findPokemonByIdentifier(idPokemon);
         var pokemon2 = pokemonApiClient.findPokemonByIdentifier(idPokemon2);
 
-        System.out.println(pokemon + "\n" + pokemon2);
-        checkExistTypes(pokemon);
+        checkExistTypes(pokemon.getTypes());
 
         var strongTypes = getDamageList(pokemon.getTypes(), doubleDamageList);
         var weakTypes = getDamageList(pokemon.getTypes(), halfDamageList);
-        log.info("event=retrieveDamageLists doubleDamageList={}, halfDamageList={}", doubleDamageList, halfDamageList);
+        log.info("event=retrieveDamageLists strongTypes={}, weakTypes={}", strongTypes, weakTypes);
 
         boolean doubleDamage = matchTypes(pokemon2.getTypes(), strongTypes);
         boolean halfDamage = matchTypes(pokemon2.getTypes(), weakTypes);
@@ -66,15 +76,49 @@ public class BattleService {
                 .build();
     }
 
-    private void checkExistTypes(Pokemon pokemon) {
-        log.info("event=checkingDamageLists pokemon={}", pokemon);
-        pokemon.getTypes().stream()
+    public CommonMovesPaged comparePokemon(String[] pokemons, Optional<String> lang, Optional<Integer> paged) {
+        var pokemonsProcessed = new HashSet<Pokemon>();
+        var movesProcessed = new HashSet<Move>();
+
+        final int DEFAULT_LIMIT = 10;
+        int limit = paged.orElse(DEFAULT_LIMIT);
+
+        var commonMoves = Arrays.stream(pokemons)
+                .map(pokemonApiClient::findPokemonByIdentifier)
+                .filter(pokemon -> !pokemonsProcessed.contains(pokemon))
+                .peek(pokemonsProcessed::add)
+                .flatMap(pokemon -> pokemon.getMoves().stream())
+                .map(Moves::getMove)
+                .filter(move -> !movesProcessed.add(move))
+                .collect(Collectors.toSet());
+        // TODO get List pokemon names
+        // TODO get List pokemon ids
+        pokemonsProcessed.stream()
+                .map(Pokemon::getName);
+
+        var moves = translateMoves(commonMoves, lang, limit);
+
+        String host = InetAddress.getLoopbackAddress().getHostName() + ":" +  environment.getProperty("server.port") + "/api/compare";
+
+        return CommonMovesPaged.builder()
+                .pokemonsCompared("Lista de pokemons")
+                .lang(lang.orElse("en"))
+                .moves(limit)
+                .moveList(moves)
+                .previous(host)
+                .next(host)
+                .build();
+    }
+
+    private void checkExistTypes(List<Types> typesList) {
+        log.info("event=checkingDamageLists typesList={}", typesList);
+        typesList.stream()
                 .map(types -> types.getType())
                 .filter(type -> !damageDealer.getDoubleDamageTypes().containsKey(type.getName()))
                 .peek(type -> log.info("event=typeAddedToDoubleDamageList type={}", type))
                 .forEach(this::addTypeToDoubleDamageList);
 
-        pokemon.getTypes().stream()
+        typesList.stream()
                 .map(types -> types.getType())
                 .filter(type -> !damageDealer.getHalfDamageTypes().containsKey(type.getName()))
                 .peek(type -> log.info("event=typeAddedToHalfDamageList type={}", type))
@@ -112,6 +156,29 @@ public class BattleService {
         return typesList.stream()
                 .map(types -> types.getType().getName())
                 .anyMatch(type -> damageList.contains(type));
+    }
+
+    private List<String> translateMoves(Set<Move> moves, Optional<String> lang, int limit) {
+        // TODO add skip
+
+        if (lang.isPresent()) {
+            String language = lang.get();
+            System.out.println(language);
+            return moves.stream()
+                    .map(Move::getUrl)
+                    .map(pokemonApiClient::findMoveByUrl)
+                    .flatMap(moveDetails -> moveDetails.getNames().stream())
+                    .peek(System.out::println)
+                    .filter(name -> name.getLanguage().getName().equals(language))
+                    .map(Name::getName)
+                    .limit(limit)
+                    .collect(Collectors.toList());
+        } else {
+            return moves.stream()
+                    .map(Move::getName)
+                    .limit(limit)
+                    .collect(Collectors.toList());
+        }
     }
 
     private Function<String, Stream<String>> doubleDamageList = type -> damageDealer.getDoubleDamageTypes().get(type).stream();

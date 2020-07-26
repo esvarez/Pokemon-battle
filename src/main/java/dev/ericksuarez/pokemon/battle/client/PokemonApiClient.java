@@ -1,6 +1,8 @@
 package dev.ericksuarez.pokemon.battle.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import dev.ericksuarez.pokemon.battle.model.MoveDetails;
 import dev.ericksuarez.pokemon.battle.model.Pokemon;
 import dev.ericksuarez.pokemon.battle.model.TypeDetails;
 import lombok.extern.slf4j.Slf4j;
@@ -33,27 +35,32 @@ public class PokemonApiClient extends HttpClientBase {
 
     public Pokemon findPokemonByIdentifier(String identifier) {
         log.info("event=findPokemonByNameInvoked identifier={}", identifier);
-        var request = HttpRequest.newBuilder()
-                .GET()
-                .uri(URI.create(path + findPokemon + identifier))
-                .header("Content-Type", "application/json")
-                .build();
-        var pokemon = makeRequest(request, Pokemon.class);
+        var pokemon = findByUrl(URI.create(path + findPokemon + identifier), Pokemon.class);
         log.info("event=pokemonRetrieved pokemon={}", pokemon);
         return pokemon;
     }
 
     public TypeDetails findTypeByUrl(String url) {
         log.info("event=findTypeByUrlInvoked url={}", url);
-        var request = HttpRequest.newBuilder()
-                .GET()
-                .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .build();
-        var typeDetails = makeRequest(request, TypeDetails.class);
+        var typeDetails = findByUrl(URI.create(url), TypeDetails.class);
         log.info("event=typeRetrieved typeDetails={}", typeDetails);
         return typeDetails;
     }
 
+    public MoveDetails findMoveByUrl(String url) {
+        log.info("event=findMoveByUrl url={}", url);
+        var move = findByUrl(URI.create(url), MoveDetails.class);
+        log.info("event=moveRetrieved move={}", move);
+        return move;
+    }
+
+    private <T> T findByUrl(URI url, Class<T> tClass) {
+        var request = HttpRequest.newBuilder()
+                .GET()
+                .uri(url)
+                .header("Content-Type", "application/json")
+                .build();
+        return makeRequest(request, tClass);
+    }
 
 }

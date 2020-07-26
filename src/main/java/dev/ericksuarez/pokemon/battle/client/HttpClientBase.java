@@ -44,7 +44,7 @@ public abstract class HttpClientBase {
                 log.error("event=errorMakeRequest statusCode={}, body={}", response.statusCode(), response.body());
                 switch (response.statusCode()) {
                     case 404:
-                        throw new NotFoundException("Resource not found: " + request.uri());
+                        throw new NotFoundException(request.uri().toString());
                     default:
                         throw new RuntimeException("Error request " + response.statusCode());
                 }
