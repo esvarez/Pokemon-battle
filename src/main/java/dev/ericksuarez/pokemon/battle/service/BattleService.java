@@ -68,8 +68,11 @@ public class BattleService {
                 ? " receive half damage from "
                 : " receive normal damage from ";
 
+        String types1 = getPokemonFormatTypes(pokemon.getTypes());
+        String types2 = getPokemonFormatTypes(pokemon.getTypes());
         return AnalysisResponse.builder()
                 .battle(pokemon.getName() + " vs " + pokemon2.getName())
+                .battleTypes("[" + types1 + "] vs [" + types2 + "]")
                 .doubleDamage(pokemon.getName() + displayDoubleDamage + pokemon2.getName())
                 .halfDamage(pokemon.getName() + displayHalfDamage + pokemon2.getName())
                 .build();
@@ -114,6 +117,13 @@ public class BattleService {
                 .pokemonsCompared(pokemonNames)
                 .moveList(moves)
                 .build();
+    }
+
+    private String getPokemonFormatTypes(List<Types> pokemonTypes) {
+        return pokemonTypes.stream()
+                .map(Types::getType)
+                .map(Type::getName)
+                .collect(Collectors.joining(", "));
     }
 
     private void checkExistTypes(List<Types> typesList) {
