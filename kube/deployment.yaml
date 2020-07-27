@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: suarez/pokemon-battle-java:1.0.0
+          image: suarez/pokemon-battle-java:1.0.1
           ports:
             - containerPort: 8080
           imagePullPolicy: Always
