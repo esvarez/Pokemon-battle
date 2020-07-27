@@ -120,6 +120,11 @@ public class BattleService {
                 .build();
     }
 
+    /**
+     *
+     * @param pokemonTypes A list with the types of the pokemons
+     * @return Return the types of the pokemons in String format joining by coma ","
+     */
     private String getPokemonTypesFormat(List<Types> pokemonTypes) {
         return pokemonTypes.stream()
                 .map(Types::getType)
@@ -127,6 +132,10 @@ public class BattleService {
                 .collect(Collectors.joining(", "));
     }
 
+    /**
+     * Verify if the type already exist in memory, if not add it
+     * @param typesList A list with the types to check
+     */
     private void checkExistTypes(List<Types> typesList) {
         log.info("event=checkingDamageLists typesList={}", typesList);
         typesList.stream()
@@ -142,6 +151,11 @@ public class BattleService {
                 .forEach(this::addTypeToHalfDamageList);
     }
 
+    /**
+     * Add a new type and the types that deal double damage
+     * @param type Values to retrieve typeDetails
+     * @see Type
+     */
     private void addTypeToDoubleDamageList(Type type) {
         var typeDetails = pokemonApiClient.findTypeByUrl(type.getUrl());
         var types = typeDetails.getDamageRelations().getDoubleDamageTo().stream()
@@ -151,6 +165,11 @@ public class BattleService {
         damageDealer.addToDoubleDamageTypes(type.getName(), types);
     }
 
+    /**
+     * Add a new type and the types that receive half damage
+     * @param type Values to retrieve typeDetails
+     * @see Type
+     */
     private void addTypeToHalfDamageList(Type type) {
         //TODO improve: avoid double call of the same request
         var typeDetails = pokemonApiClient.findTypeByUrl(type.getUrl());
@@ -161,13 +180,25 @@ public class BattleService {
         damageDealer.addToHalfDamageTypes(type.getName(), types);
     }
 
-    private Set<String> getDamageList(List<Types> typesList, Function<String, Stream<String>> getTypesFromdamageList) {
+    /**
+     * Merge all the types stats in one list from one of the damageList
+     * @param typesList Types to merge
+     * @param getTypesFromDamageList Function interface with the damageList to get the stats
+     * @return All types merged in one list
+     */
+    private Set<String> getDamageList(List<Types> typesList, Function<String, Stream<String>> getTypesFromDamageList) {
         return typesList.stream()
                 .map(types -> types.getType().getName())
-                .flatMap(getTypesFromdamageList)
+                .flatMap(getTypesFromDamageList)
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * Verify if one of the types exist in the stats of the damageList
+     * @param typesList List with the types to verify
+     * @param damageList List with the stats to check in
+     * @return true if one of the types exist in the damageList
+     */
     private boolean matchTypes(List<Types> typesList, Set<String> damageList) {
         log.info("event=findingTypeOnDamageList typeList={}, damageList={}", typesList, damageList);
         return typesList.stream()
@@ -175,6 +206,16 @@ public class BattleService {
                 .anyMatch(type -> damageList.contains(type));
     }
 
+    /**
+     * Build paged info of CommonMovesPaged
+     * @param pokemonIds Number of the pokemons in string format joining by coma
+     * @param lang Lang of the moves
+     * @param pageNumber Number of the current page
+     * @param limit Number of moves shows by page
+     * @param totalMoves Number of the total moves to show
+     * @return An object with the info of the moves paged
+     * @see CommonMovesPaged
+     */
     private CommonMovesPaged getPaginateValues(String pokemonIds, String lang, int pageNumber, int limit, int totalMoves) {
         String host = InetAddress.getLoopbackAddress().getHostName() + ":" +  environment.getProperty("server.port")
                 + "/api/compare?pokemons=" + pokemonIds;
@@ -199,7 +240,16 @@ public class BattleService {
                 .build();
     }
 
+    /**
+     * Translate the name of the moves
+     * @param moves List with the moves to translate
+     * @param lang Lang to translate the moves
+     * @param limit Number of moves to translate
+     * @param skip Number of moves that skip
+     * @return The moves in the new language selected if exist, if not will return empty list
+     */
     private List<String> translateMoves(List<Move> moves, Optional<String> lang, int limit, int skip) {
+        // TODO handle exception if the lang not exist
         if (lang.isPresent()) {
             String language = lang.get();
             return moves.stream()
