@@ -10,7 +10,7 @@ deploy:
     local_dir: dpl_cd_upload
     skip_cleanup: true
     on: &2
-      repo: https://github.com/esvarez/Pokemon-battle
+      repo: suarez/pokemon-battle-java
     bucket: pokemon-battle-app
     region: us-west-1
   - provider: codedeploy
