@@ -338,7 +338,7 @@ public class BattleServiceTest {
         assertEquals(2, commonMoves.getPages());
         assertEquals(2, commonMoves.getPage());
         assertEquals("none", commonMoves.getNext());
-        assertEquals("ej", commonMoves.getLang());
+        assertEquals("en", commonMoves.getLang());
     }
 
 
