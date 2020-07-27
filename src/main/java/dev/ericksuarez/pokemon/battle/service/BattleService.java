@@ -180,11 +180,11 @@ public class BattleService {
                 + "/api/compare?pokemons=" + pokemonIds;
         String basicValues = "&lang=" + lang + "&limit=" + limit;
 
-        int totalPages = totalMoves / limit;
+        int totalPages = (int) Math.round((double) totalMoves / limit);
         String previous = pageNumber == 1
                 ? "none"
                 : host + "&page=" + (pageNumber - 1) + basicValues;
-        String next = pageNumber == totalPages
+        String next = pageNumber >= totalPages
                 ? "none"
                 : host + "&page=" + (pageNumber + 1) + basicValues;
 
