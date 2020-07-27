@@ -20,7 +20,7 @@ public class DamageDealer {
         return doubleDamageTypes.put(name, types);
     }
 
-    public Set<String> addTohalfDamageTypes(String name, Set<String> types) {
+    public Set<String> addToHalfDamageTypes(String name, Set<String> types) {
         return halfDamageTypes.put(name, types);
     }
 }

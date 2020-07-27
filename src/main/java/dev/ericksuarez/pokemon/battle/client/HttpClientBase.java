@@ -48,7 +48,6 @@ public abstract class HttpClientBase {
                     default:
                         throw new RuntimeException("Error request " + response.statusCode());
                 }
-
             } else if(response.statusCode() >= 200) {
                 return response;
             }

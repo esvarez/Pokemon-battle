@@ -3,6 +3,7 @@ package dev.ericksuarez.pokemon.battle.service;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -68,8 +69,8 @@ public class BattleService {
                 ? " receive half damage from "
                 : " receive normal damage from ";
 
-        String types1 = getPokemonFormatTypes(pokemon.getTypes());
-        String types2 = getPokemonFormatTypes(pokemon.getTypes());
+        String types1 = getPokemonTypesFormat(pokemon.getTypes());
+        String types2 = getPokemonTypesFormat(pokemon2.getTypes());
         return AnalysisResponse.builder()
                 .battle(pokemon.getName() + " vs " + pokemon2.getName())
                 .battleTypes("[" + types1 + "] vs [" + types2 + "]")
@@ -101,8 +102,8 @@ public class BattleService {
                 .map(Moves::getMove)
                 .collect(Collectors.groupingBy(move -> move, Collectors.counting()))
                 .entrySet().stream()
-                .filter(key -> key.getValue() == pokemonsToProcess.size())
-                .map(map -> map.getKey())
+                .filter(entry -> entry.getValue() == pokemonsToProcess.size())
+                .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
         var moves = translateMoves(commonMoves, lang, limit, skip);
@@ -119,7 +120,7 @@ public class BattleService {
                 .build();
     }
 
-    private String getPokemonFormatTypes(List<Types> pokemonTypes) {
+    private String getPokemonTypesFormat(List<Types> pokemonTypes) {
         return pokemonTypes.stream()
                 .map(Types::getType)
                 .map(Type::getName)
@@ -157,13 +158,13 @@ public class BattleService {
                 .map(halfDamageTypes -> halfDamageTypes.getName())
                 .collect(Collectors.toSet());
         log.info("event=typeHalfDamageListRetrieved types={}", types);
-        damageDealer.addTohalfDamageTypes(type.getName(), types);
+        damageDealer.addToHalfDamageTypes(type.getName(), types);
     }
 
-    private Set<String> getDamageList(List<Types> typesList, Function<String, Stream<String>> damageList) {
+    private Set<String> getDamageList(List<Types> typesList, Function<String, Stream<String>> getTypesFromdamageList) {
         return typesList.stream()
                 .map(types -> types.getType().getName())
-                .flatMap(damageList)
+                .flatMap(getTypesFromdamageList)
                 .collect(Collectors.toSet());
     }
 
