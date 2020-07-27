@@ -2,5 +2,4 @@ language: java
 jdk:
   - openjdk11
 script:
-  - chmod +x gradlew
   - ./gradlew test build
