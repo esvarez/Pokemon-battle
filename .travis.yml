@@ -15,15 +15,16 @@ deploy:
     access_key_id: $AWS_ACCESS_KEY
     secret_access_key: $AWS_SECRET_KEY
     bucket: pokemon-battle-app
-    key: latest.zip
+    key: latest/pokemon-battle.zip
     bundle_type: zip
     application: pokemon-battle
     deployment_group: pokemon-app-group
     region: us-west-1
-    on: *2
+    on:
+      all_branches: true
 
 script:
   - zip -r latest *
   - mkdir -p dpl_cd_upload
-  - mv latest.zip dpl_cd_upload/latest.zip
+  - mv latest.zip dpl_cd_upload/latest/*
 
