@@ -3,8 +3,29 @@ language: java
 jdk:
   - openjdk11
 
-services:
-  - docker
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key: $AWS_SECRET_KEY
+    local_dir: dpl_cd_upload
+    skip_cleanup: true
+    on: &2
+      repo: https://github.com/esvarez/Pokemon-battle
+    bucket: pokemon-battle-app
+    region: us-west-1
+  - provider: codedeploy
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key: $AWS_SECRET_KEY
+    bucket: pokemon-battle-app
+    key: latest.zip
+    bundle_type: zip
+    application: pokemon-battle
+    deployment_group: pokemon-app-group
+    region: us-west-1
+    on: *2
 
 script:
-  - ./gradlew test build
+  - zip -r latest *
+  - mkdir -p dpl_cd_upload
+  - mv latest.zip dpl_cd_upload/latest.zip
+
