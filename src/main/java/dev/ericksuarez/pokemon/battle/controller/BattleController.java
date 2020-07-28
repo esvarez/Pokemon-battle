@@ -52,4 +52,9 @@ public class BattleController {
                                     @RequestParam Optional<Integer> limit, @RequestParam Optional<Integer> page) {
         return battleService.comparePokemon(pokemons, lang, limit, page);
     }
+
+    @GetMapping("/deploy")
+    public String deploy() {
+        return "Deployed";
+    }
 }
