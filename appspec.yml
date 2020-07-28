@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /tmp/deply
+    destination: /tmp/deploy
 hooks:
   AfterInstall:
     - location: scripts/fix_previleges.sh
