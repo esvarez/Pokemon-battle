@@ -1,20 +1,17 @@
 version: 0.2
 
+env:
+  variables:
+    JAVA_HOME: "java-11-openjdk-11.0.7.10-4.amzn2.0.1.x86_64"
+
 phases:
-  install:
-    runtime-versions:
-      java: corretto11
   build:
     commands:
       - echo Build started on `date`
-      - gradlew test
-  post_build:
-    commands:
-      - echo Build completed on `date`
       - gradlew build
 artifacts:
   files:
-    - build/libs/*.jar
-    - scripts/*.sh
     - appspec.yml
+    - scripts/*.sh
+    - build/libs/*.jar
   discard-paths: yes
