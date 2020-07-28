@@ -14,7 +14,7 @@ phases:
       - gradlew build
 artifacts:
   files:
-    - build/libs/pokemon-battle-0.0.1-SNAPSHOT.jar
+    - build/libs/*.jar
     - scripts/*.sh
     - appspec.yml
   discard-paths: yes
