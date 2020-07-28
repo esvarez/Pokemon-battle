@@ -55,6 +55,6 @@ public class BattleController {
 
     @GetMapping("/deploy")
     public String deploy() {
-        return "Deployed v1";
+        return "Deployed v2";
     }
 }
