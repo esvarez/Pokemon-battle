@@ -1,6 +1,4 @@
 #!/bin/bash
-if ((ps -C java | wc -l) > 1)
-then
-    pkill -f 'java -jar'
-fi
+pkill -f 'java -jar'
+exit 0
 
