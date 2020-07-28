@@ -57,7 +57,7 @@ public class BattleControllerTest {
                 , "1,2,3", "es", 2, 5))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.lang", is("es")))
+                .andExpect(jsonPath("$.lang", is("e")))
                 .andExpect(jsonPath("$.page", is(2)))
                 .andExpect(jsonPath("$.moves", is(5)));
     }
